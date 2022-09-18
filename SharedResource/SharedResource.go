@@ -4,33 +4,34 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"strings"
 )
 
+/* Método para checar se há erro e apresentá-lo */
 func CheckError(err error) {
 	if err != nil {
-		fmt.Println("Erro: ", err)
+		fmt.Println("Error: ", err)
 		os.Exit(0)
 	}
 }
 
 func main() {
-	Address, err := net.ResolveUDPAddr("udp", ":10001")
+	/* Preparando o servidor na porta 10001 */
+	ServerAddr, err := net.ResolveUDPAddr("udp", "127.0.0.1"+":10001")
 	CheckError(err)
-	Connection, err := net.ListenUDP("udp", Address)
-	CheckError(err)
-	defer Connection.Close()
-	fmt.Printf("server listening %s\n", Connection.LocalAddr().String())
 
+	/* Escutar */
+	ServerConn, err := net.ListenUDP("udp", ServerAddr)
+	CheckError(err)
+	defer ServerConn.Close()
+
+	buf := make([]byte, 1024)
+
+	// Loop para ficar lendo o buffer e imprimindo as mensagens que chegarem
 	for {
-		//Loop infinito para receber mensagem e escrever todo
-		//conteúdo (processo que enviou, relógio recebido e texto)
-		//na tela
-		//FALTA FAZER
-		message := make([]byte, 20)
-		r_length, remote, err := Connection.ReadFromUDP(message[:])
-		CheckError(err)
-		data := strings.TrimSpace(string(message[:r_length]))
-		fmt.Printf("received: %s from %s\n", data, remote)
+		n, addr, err := ServerConn.ReadFromUDP(buf)
+		if err != nil {
+			fmt.Println("Error: ", err)
+		}
+		fmt.Println("Received\n"+string(buf[0:n])+"from", addr)
 	}
 }
